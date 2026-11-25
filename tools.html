@@ -66,6 +66,14 @@ th{font-size:14px;color:var(--soft);font-weight:600}
 textarea{font:16px "Source Sans 3",Arial,sans-serif;width:100%;min-height:90px;padding:10px;border:1px solid color-mix(in srgb,var(--ink) 30%,transparent);border-radius:8px;background:var(--bg);color:var(--ink)}
 .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .formula{font-size:15px;color:var(--soft);margin-top:14px;line-height:1.7}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.ct{margin:6px 0 0;font-weight:600;font-size:15px}
+.fig.sm{height:240px;margin-top:4px}
+.scroll{overflow-x:auto}
+table.rc td,table.rc th{white-space:nowrap}
+table.rc tbody tr{cursor:pointer}
+table.rc tbody tr:hover{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+table.rc tr.ex td{color:var(--soft);font-style:italic}
 [hidden]{display:none!important}
 footer{border-top:1px solid var(--line);padding:22px 0;color:var(--soft);font-size:15px}
 @media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}.out{order:-1}}
@@ -77,12 +85,12 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--soft);font-si
 <div class="wrap">
 <div>
 <h1>Sand specimen lab tools</h1>
-<p>Prepare polyurethane-coated binary sand specimens and reduce resonant column damping data. By <a href="index.html">Mryam Ayad Hashm</a>.</p>
+<p>Prepare polyurethane-coated binary sand specimens, compute resonant column damping by logarithmic decrement, and view my 60C/40F results. By <a href="index.html">Mryam Ayad Hashm</a>.</p>
 </div>
 </div>
 <div class="wrap tabs" role="tablist">
 <button class="tab" role="tab" id="t-prep" aria-selected="true" aria-controls="p-prep">Specimen preparation</button>
-<button class="tab" role="tab" id="t-damp" aria-selected="false" aria-controls="p-damp">RC damping</button>
+<button class="tab" role="tab" id="t-damp" aria-selected="false" aria-controls="p-damp">RC results and damping</button>
 </div>
 </header>
 
@@ -94,17 +102,17 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--soft);font-si
 <p style="font-weight:600;margin:0">Mixture (coarse : fine by dry mass)</p>
 <div class="pre" id="mix"></div>
 <div class="f"><label for="cf">Coarse fraction<small>Grade 4 share of dry sand mass</small></label><div class="in"><input id="cf" type="number" min="0" max="100" step="5" value="60"><span class="u">%</span></div></div>
-<div class="f"><label for="emax">e<sub>max</sub><small>Loosest state of this mixture</small></label><div class="in"><input id="emax" type="number" step="0.001" value="0.850"><span class="u"></span></div></div>
-<div class="f"><label for="emin">e<sub>min</sub><small>Densest state of this mixture</small></label><div class="in"><input id="emin" type="number" step="0.001" value="0.550"><span class="u"></span></div></div>
+<div class="f"><label for="emax">e<sub>max</sub><small>Loosest state of this mixture</small></label><div class="in"><input id="emax" type="number" step="0.001" value="0.620"><span class="u"></span></div></div>
+<div class="f"><label for="emin">e<sub>min</sub><small>Densest state of this mixture</small></label><div class="in"><input id="emin" type="number" step="0.001" value="0.395"><span class="u"></span></div></div>
 <div class="f"><label for="dr">Target relative density, D<sub>r</sub></label><div class="in"><input id="dr" type="number" min="0" max="100" step="5" value="60"><span class="u">%</span></div></div>
 <div class="f"><label for="gs">Specific gravity, G<sub>s</sub></label><div class="in"><input id="gs" type="number" step="0.01" value="2.64"><span class="u"></span></div></div>
 <div class="f"><label for="dia">Specimen diameter</label><div class="in"><input id="dia" type="number" step="1" value="50"><span class="u">mm</span></div></div>
 <div class="f"><label for="ht">Specimen height</label><div class="in"><input id="ht" type="number" step="1" value="110"><span class="u">mm</span></div></div>
-<div class="f"><label for="coat">Coated fraction<small>Which grains carry the PU coating</small></label><select id="coat"><option value="none">None (uncoated)</option><option value="coarse" selected>Coarse only</option><option value="fine">Fine only</option><option value="both">Both</option></select></div>
+<div class="f"><label for="coat">Coated fraction<small>Which grains carry the PU coating</small></label><select id="coat"><option value="none" selected>None (uncoated)</option><option value="coarse">Coarse only</option><option value="fine">Fine only</option><option value="both">Both</option></select></div>
 <div class="f"><label for="pu">PU dosage<small>% of the coated sand’s dry mass</small></label><div class="in"><input id="pu" type="number" min="0" step="0.5" value="1"><span class="u">%</span></div></div>
 <div class="f"><label for="ly">Number of layers</label><div class="in"><input id="ly" type="number" min="1" max="20" step="1" value="5"><span class="u"></span></div></div>
-<div class="row"><button class="btn" id="reset" type="button">Reset to example</button></div>
-<p class="note">Values shown are examples. Your entries are remembered in this browser only.</p>
+<div class="row"><button class="btn" id="reset" type="button">Reset to 60C/40F uncoated</button></div>
+<p class="note">Opens with my 60C/40F uncoated mixture (e<sub>max</sub> 0.620, e<sub>min</sub> 0.395). For another mixture, enter its own e<sub>max</sub> and e<sub>min</sub>. Entries are remembered in this browser only.</p>
 </div>
 
 <div class="card out" aria-live="polite">
@@ -135,24 +143,28 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--soft);font-si
 <section id="p-damp" role="tabpanel" aria-labelledby="t-damp" hidden>
 <div class="grid">
 <div class="card">
-<h2>Logarithmic decrement</h2>
-<label for="amps" style="font-weight:600">Successive peak amplitudes of the free-vibration decay</label>
-<textarea id="amps">1.00, 0.86, 0.74, 0.64, 0.55, 0.47, 0.41, 0.35</textarea>
-<p class="note">Example decay. Paste peaks separated by commas, spaces or new lines.</p>
-<h2 style="margin-top:22px">Half-power bandwidth</h2>
-<div class="f"><label for="f1">Lower half-power frequency, f<sub>1</sub></label><div class="in"><input id="f1" type="number" step="0.01" value="58.2"><span class="u">Hz</span></div></div>
-<div class="f"><label for="fr">Resonant frequency, f<sub>r</sub></label><div class="in"><input id="fr" type="number" step="0.01" value="60.0"><span class="u">Hz</span></div></div>
-<div class="f"><label for="f2">Upper half-power frequency, f<sub>2</sub></label><div class="in"><input id="f2" type="number" step="0.01" value="61.9"><span class="u">Hz</span></div></div>
+<h2>Damping by logarithmic decrement</h2>
+<p class="note" style="margin:0 0 10px">From the free-vibration decay after the drive is switched off: the amplitude Y<sub>1</sub> of the first peak, the amplitude Y<sub>2</sub> after n cycles, and n.</p>
+<div class="f"><label for="y1">First peak, Y<sub>1</sub></label><div class="in"><input id="y1" type="number" step="0.01" value="15"><span class="u">mV</span></div></div>
+<div class="f"><label for="y2">Peak after n cycles, Y<sub>2</sub></label><div class="in"><input id="y2" type="number" step="0.01" value="10.2"><span class="u">mV</span></div></div>
+<div class="f"><label for="nc">Number of cycles, n</label><div class="in"><input id="nc" type="number" min="1" step="1" value="7"><span class="u"></span></div></div>
+<div class="kpis">
+<div class="k"><b id="dld" style="font-size:44px;color:var(--acc)">–</b><span>Damping ratio, D</span></div>
+<div class="k"><b id="dl">–</b><span>Log decrement, δ</span></div>
 </div>
-<div class="card out" aria-live="polite">
-<h2>Damping ratio</h2>
-<div class="kpis" style="margin-top:0">
-<div class="k"><b id="dld" style="font-size:40px;color:var(--acc)">–</b><span>Log decrement, D</span></div>
-<div class="k"><b id="dhp" style="font-size:40px">–</b><span>Half-power, D</span></div>
-<div class="k"><b id="dl">–</b><span>δ (fitted)</span></div>
+<p class="formula">δ = (1/n) ln(Y<sub>1</sub>/Y<sub>2</sub>) · D = δ / √(4π² + δ²)</p>
+<p class="note">Click a row of the results table to load its readings here.</p>
 </div>
-<div class="fig" id="fig" role="img" aria-label="Peak amplitudes against cycle number with the fitted exponential decay"></div>
-<p class="formula">δ is the slope of ln(A) against cycle number (least squares over all peaks) · D = δ / √(4π² + δ²) · Half-power: D = (f<sub>2</sub> − f<sub>1</sub>) / (2f<sub>r</sub>)</p>
+<div class="card out">
+<h2>60C/40F, uncoated, D<sub>r</sub> = 60%</h2>
+<p class="note" style="margin:-6px 0 10px">My resonant column results. G/G<sub>max</sub> and damping against equivalent shear strain at three confining stresses.</p>
+<div class="pre" id="press"></div>
+<div class="charts">
+<div><p class="ct">G/G<sub>max</sub></p><div class="fig sm" id="figG" role="img" aria-label="G over G max against shear strain for 100, 200 and 300 kPa"></div></div>
+<div><p class="ct">Damping ratio, D (%)</p><div class="fig sm" id="figD" role="img" aria-label="Damping ratio against shear strain for 100, 200 and 300 kPa"></div></div>
+</div>
+<div class="scroll"><table class="rc" aria-label="Resonant column readings"><thead><tr><th>f<sub>r</sub> (Hz)</th><th>γ<sub>eq</sub> (%)</th><th>G (MPa)</th><th>G/G<sub>max</sub></th><th>Y<sub>1</sub></th><th>Y<sub>2</sub></th><th>n</th><th>D (%)</th></tr></thead><tbody id="rows"></tbody></table></div>
+<p class="note">The last step at each stress (0.7 V) is kept in the table but left out of the charts: the apparatus vibrated.</p>
 </div>
 </div>
 </section>
@@ -163,11 +175,11 @@ footer{border-top:1px solid var(--line);padding:22px 0;color:var(--soft);font-si
 {
 const $=id=>document.getElementById(id);
 const ids=['cf','emax','emin','dr','gs','dia','ht','coat','pu','ly'];
-const ex={cf:'60',emax:'0.850',emin:'0.550',dr:'60',gs:'2.64',dia:'50',ht:'110',coat:'coarse',pu:'1',ly:'5'};
+const ex={cf:'60',emax:'0.620',emin:'0.395',dr:'60',gs:'2.64',dia:'50',ht:'110',coat:'none',pu:'1',ly:'5'};
 const mixes=[[100,'100C'],[80,'80C/20F'],[60,'60C/40F'],[40,'40C/60F'],[20,'20C/80F'],[0,'100F']];
 $('mix').innerHTML=mixes.map(([v,l])=>`<button type="button" data-v="${v}" aria-pressed="false">${l}</button>`).join('');
-const load=()=>{try{const s=JSON.parse(localStorage.getItem('specprep')||'null');if(s)ids.forEach(k=>{if(s[k]!=null)$(k).value=s[k]})}catch(e){}};
-const save=()=>{try{localStorage.setItem('specprep',JSON.stringify(Object.fromEntries(ids.map(k=>[k,$(k).value]))))}catch(e){}};
+const load=()=>{try{const s=JSON.parse(localStorage.getItem('specprep2')||'null');if(s)ids.forEach(k=>{if(s[k]!=null)$(k).value=s[k]})}catch(e){}};
+const save=()=>{try{localStorage.setItem('specprep2',JSON.stringify(Object.fromEntries(ids.map(k=>[k,$(k).value]))))}catch(e){}};
 const f=(x,d)=>Number.isFinite(x)?x.toFixed(d):'–';
 function calc(){
 const n=k=>parseFloat($(k).value);
@@ -198,31 +210,47 @@ $('col').innerHTML=`<svg viewBox="0 0 ${W} ${H}" aria-label="Specimen with ${L} 
 <rect x="${x0}" y="${y0}" width="${cw}" height="${ch}" fill="none" stroke="var(--ink)" stroke-width="1.5"/>
 <text x="${x0+cw/2}" y="${H-6}" text-anchor="middle" font-size="13" fill="var(--soft)" font-family="Source Sans 3,Arial">${L} layers · ${Math.round(cf*100)}% coarse</text></svg>`;
 }
+const RC={"100":[{"fr":120,"g":0.000814,"G":120.41,"GG":1,"y1":15,"y2":10.2,"n":7,"ex":0},{"fr":119,"g":0.001273,"G":118.41,"GG":0.9834,"y1":17.25,"y2":12,"n":7,"ex":0},{"fr":117.6,"g":0.001754,"G":115.64,"GG":0.9604,"y1":18,"y2":11.7,"n":7,"ex":0},{"fr":115,"g":0.002788,"G":110.58,"GG":0.9184,"y1":24.75,"y2":13.75,"n":7,"ex":0},{"fr":113,"g":0.003584,"G":106.77,"GG":0.8867,"y1":19,"y2":10,"n":7,"ex":0},{"fr":107,"g":0.005548,"G":95.73,"GG":0.7951,"y1":26,"y2":11.75,"n":7,"ex":0},{"fr":104,"g":0.006576,"G":90.44,"GG":0.7511,"y1":34,"y2":13.75,"n":7,"ex":0},{"fr":99,"g":0.008616,"G":81.95,"GG":0.6806,"y1":56,"y2":20,"n":7,"ex":0},{"fr":94,"g":0.011172,"G":73.88,"GG":0.6136,"y1":75,"y2":23,"n":7,"ex":1}],"200":[{"fr":127,"g":0.000739,"G":134.87,"GG":1,"y1":18.75,"y2":12.75,"n":8,"ex":0},{"fr":126.8,"g":0.001157,"G":134.44,"GG":0.9969,"y1":19.25,"y2":13.75,"n":8,"ex":0},{"fr":126,"g":0.001788,"G":132.75,"GG":0.9843,"y1":23.75,"y2":16.5,"n":8,"ex":0},{"fr":124.5,"g":0.002805,"G":129.61,"GG":0.961,"y1":28,"y2":17,"n":8,"ex":0},{"fr":122.7,"g":0.003949,"G":125.89,"GG":0.9334,"y1":35,"y2":18.75,"n":8,"ex":0},{"fr":120,"g":0.005299,"G":120.41,"GG":0.8928,"y1":48.75,"y2":22.5,"n":8,"ex":0},{"fr":117,"g":0.00666,"G":114.46,"GG":0.8487,"y1":59.25,"y2":24,"n":8,"ex":0},{"fr":112,"g":0.008576,"G":104.89,"GG":0.7777,"y1":64,"y2":24.75,"n":8,"ex":0},{"fr":108,"g":0.010573,"G":97.53,"GG":0.7232,"y1":87,"y2":30,"n":8,"ex":1}],"300":[{"fr":134.5,"g":0.000763,"G":151.27,"GG":1,"y1":30,"y2":22.25,"n":8,"ex":0},{"fr":134.3,"g":0.001175,"G":150.82,"GG":0.997,"y1":37.75,"y2":28.25,"n":8,"ex":0},{"fr":133.7,"g":0.001943,"G":149.47,"GG":0.9881,"y1":42.25,"y2":32,"n":8,"ex":0},{"fr":133.4,"g":0.003061,"G":148.8,"GG":0.9837,"y1":54,"y2":36.75,"n":8,"ex":0},{"fr":132.6,"g":0.004018,"G":147.02,"GG":0.9719,"y1":62,"y2":38,"n":8,"ex":0},{"fr":131,"g":0.005461,"G":143.5,"GG":0.9486,"y1":86,"y2":44,"n":8,"ex":0},{"fr":128,"g":0.006722,"G":137.0,"GG":0.9057,"y1":112,"y2":50.25,"n":8,"ex":0},{"fr":125,"g":0.008465,"G":130.65,"GG":0.8637,"y1":122,"y2":52,"n":8,"ex":0},{"fr":119,"g":0.011608,"G":118.41,"GG":0.7828,"y1":146,"y2":56,"n":8,"ex":1}]};let P='100';
+const Dof=(y1,y2,n)=>{if(!(y1>0&&y2>0&&n>0))return null;const d=Math.log(y1/y2)/n;return{d,D:100*d/Math.sqrt(4*Math.PI**2+d*d)}};
 function damp(){
-const a=$('amps').value.split(/[\s,;]+/).map(Number).filter(v=>v>0);
-const tp=2*Math.PI;let D='–',dl='–';const fig=$('fig');
-if(a.length>=2){const n=a.length,xs=a.map((_,i)=>i),ys=a.map(Math.log),mx=xs.reduce((p,c)=>p+c,0)/n,my=ys.reduce((p,c)=>p+c,0)/n;
-let sxy=0,sxx=0;xs.forEach((x,i)=>{sxy+=(x-mx)*(ys[i]-my);sxx+=(x-mx)**2});const slope=sxy/sxx,del=-slope,b=my-slope*mx;
-dl=f(del,4);D=f(100*del/Math.sqrt(tp*tp+del*del),2)+'%';
-const W=fig.clientWidth,H=fig.clientHeight,ml=40,mb=30,mt=12,mr=12,amax=Math.max(...a)*1.08;
-const X=i=>ml+(W-ml-mr)*i/(n-1),Y=v=>mt+(H-mt-mb)*(1-v/amax);
-let fit='';for(let i=0;i<=40;i++){const t=(n-1)*i/40;fit+=(i?'L':'M')+X(t).toFixed(1)+' '+Y(Math.exp(b+slope*t)).toFixed(1)}
-const step=W<420?2:1;let ticks='';for(let i=0;i<n;i+=step)ticks+=`<text x="${X(i)}" y="${H-10}" text-anchor="middle">${i}</text>`;
-fig.innerHTML=`<svg aria-hidden="true"><line x1="${ml}" x2="${W-mr}" y1="${H-mb}" y2="${H-mb}" stroke="var(--line)"/><line x1="${ml}" x2="${ml}" y1="${mt}" y2="${H-mb}" stroke="var(--line)"/>${ticks}<text x="${ml-6}" y="${Y(amax/1.08)+4}" text-anchor="end">${f(amax/1.08,2)}</text><text x="${ml-6}" y="${H-mb}" text-anchor="end">0</text><text x="${W-mr}" y="${H-mb-8}" text-anchor="end">cycle number</text>
-<path d="${fit}" fill="none" stroke="var(--acc)" stroke-width="2.5"/>${a.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="5" fill="var(--ink)"/>`).join('')}</svg>`;}
-else fig.innerHTML='<p class="note">Enter at least two peak amplitudes.</p>';
-$('dld').textContent=D;$('dl').textContent=dl;
-const f1=parseFloat($('f1').value),f2=parseFloat($('f2').value),fr=parseFloat($('fr').value);
-$('dhp').textContent=(f2>f1&&fr>0)?f(100*(f2-f1)/(2*fr),2)+'%':'–';
+const r=Dof(parseFloat($('y1').value),parseFloat($('y2').value),parseFloat($('nc').value));
+$('dld').textContent=r?f(r.D,2)+'%':'–';$('dl').textContent=r?f(r.d,4):'–';
 }
+function rcTable(){
+document.querySelectorAll('#press button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.p===P)));
+$('rows').innerHTML=RC[P].map((r,i)=>{const D=Dof(r.y1,r.y2,r.n);return `<tr data-i="${i}" class="${r.ex?'ex':''}" tabindex="0"><td>${r.fr}</td><td>${r.g.toFixed(5)}</td><td>${r.G.toFixed(1)}</td><td>${r.GG.toFixed(3)}</td><td>${r.y1}</td><td>${r.y2}</td><td>${r.n}</td><td><b>${f(D.D,2)}</b>${r.ex?' · 0.7 V':''}</td></tr>`}).join('');
+charts();
+}
+function chart(el,key){
+const W=el.clientWidth,H=el.clientHeight;if(!W)return;
+const ml=44,mr=58,mt=10,mb=30,x0=Math.log10(5e-4),x1=Math.log10(2e-2);
+const pts=k=>RC[k].filter(r=>!r.ex).map(r=>[r.g,key==='GG'?r.GG:Dof(r.y1,r.y2,r.n).D]);
+const all=Object.keys(RC).flatMap(k=>pts(k).map(p=>p[1]));
+const y0=key==='GG'?0.5:0,y1=key==='GG'?1.05:Math.ceil(Math.max(...all)*1.15*2)/2;
+const X=g=>ml+(W-ml-mr)*(Math.log10(g)-x0)/(x1-x0),Y=v=>mt+(H-mt-mb)*(1-(v-y0)/(y1-y0));
+let g='';[5e-4,1e-3,2e-3,5e-3,1e-2,2e-2].forEach(t=>{const big=t===1e-3||t===1e-2;if(W<360&&!big)return;g+=`<line x1="${X(t)}" x2="${X(t)}" y1="${mt}" y2="${H-mb}" stroke="var(--line)"/><text x="${X(t)}" y="${H-10}" text-anchor="middle">${t}</text>`});
+const yt=key==='GG'?[0.6,0.8,1.0]:[0,y1/2,y1];yt.forEach(v=>{g+=`<line x1="${ml}" x2="${W-mr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)"/><text x="${ml-6}" y="${Y(v)+4}" text-anchor="end">${key==='GG'?v.toFixed(1):f(v,1)}</text>`});
+g+=`<text x="${W-mr}" y="${mt+12}" text-anchor="end">γ (%)</text>`;
+const order=Object.keys(RC).filter(k=>k!==P).concat(P);
+order.forEach(k=>{const p=pts(k),sel=k===P,col=sel?'var(--acc)':'var(--soft)',op=sel?1:.45;
+g+=`<path d="${p.map((q,i)=>(i?'L':'M')+X(q[0]).toFixed(1)+' '+Y(q[1]).toFixed(1)).join('')}" fill="none" stroke="${col}" stroke-width="${sel?2.5:1.5}" opacity="${op}"/>`;
+g+=p.map(q=>`<circle cx="${X(q[0]).toFixed(1)}" cy="${Y(q[1]).toFixed(1)}" r="${sel?4:3}" fill="${col}" opacity="${op}"/>`).join('');
+const l=p[p.length-1];g+=`<text x="${X(l[0])+8}" y="${Y(l[1])+4}" style="fill:${col};font-weight:${sel?600:400}" opacity="${sel?1:.8}">${k} kPa</text>`});
+el.innerHTML=`<svg aria-hidden="true">${g}</svg>`;
+}
+function charts(){chart($('figG'),'GG');chart($('figD'),'D')}
+$('press').innerHTML=Object.keys(RC).map(k=>`<button type="button" data-p="${k}" aria-pressed="false">${k} kPa</button>`).join('');
+$('press').addEventListener('click',e=>{const b=e.target.closest('button');if(b){P=b.dataset.p;rcTable()}});
+const pick=e=>{const tr=e.target.closest('tr[data-i]');if(!tr)return;const r=RC[P][+tr.dataset.i];$('y1').value=r.y1;$('y2').value=r.y2;$('nc').value=r.n;damp()};
+$('rows').addEventListener('click',pick);$('rows').addEventListener('keydown',e=>{if(e.key==='Enter')pick(e)});
 load();
 ids.forEach(k=>$(k).addEventListener('input',calc));
 $('mix').addEventListener('click',e=>{const b=e.target.closest('button');if(b){$('cf').value=b.dataset.v;calc()}});
 $('reset').addEventListener('click',()=>{ids.forEach(k=>$(k).value=ex[k]);calc()});
-['amps','f1','f2','fr'].forEach(k=>$(k).addEventListener('input',damp));
+['y1','y2','nc'].forEach(k=>$(k).addEventListener('input',damp));
 const tabs=[['t-prep','p-prep'],['t-damp','p-damp']];
-tabs.forEach(([t,p])=>$(t).addEventListener('click',()=>{tabs.forEach(([t2,p2])=>{$(t2).setAttribute('aria-selected',String(t2===t));$(p2).hidden=t2!==t});if(t==='t-damp')damp()}));
-const ro=new ResizeObserver(()=>{if(!$('p-damp').hidden)damp()});ro.observe($('fig'));
+tabs.forEach(([t,p])=>$(t).addEventListener('click',()=>{tabs.forEach(([t2,p2])=>{$(t2).setAttribute('aria-selected',String(t2===t));$(p2).hidden=t2!==t});if(t==='t-damp'){damp();rcTable()}}));
+const ro=new ResizeObserver(()=>{if(!$('p-damp').hidden)charts()});ro.observe($('figG'));
 calc();
 }
 </script>
